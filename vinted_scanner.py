@@ -521,10 +521,13 @@ def process_queries(session, catalog_url, queries, api_headers, analyzed_items, 
     processing_failed = False
     for params in queries:
         matched_query = params.get("search_text") or "filters only"
+        print(f"[SKAN] Szukam: '{matched_query}'...", flush=True)
         try:
             items = get_catalog_items(session, catalog_url, params, api_headers)
+            print(f"[WYNIK] Dla '{matched_query}' znaleziono ofert: {len(items)}", flush=True)
         except CatalogError as error:
             logging.error("%s", error)
+            print(f"[BŁĄD] Wystąpił błąd przy zapytaniu '{matched_query}': {error}", flush=True)
             processing_failed = True
             continue
 
@@ -537,6 +540,7 @@ def process_queries(session, catalog_url, queries, api_headers, analyzed_items, 
             ):
                 processing_failed = True
     return processing_failed
+    
 
 
 def load_configuration(dry_run=False):
