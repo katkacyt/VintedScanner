@@ -58,7 +58,7 @@ queries = [
         "page": "1",
         "per_page": "24",
         "search_text": "albâtre",
-        "order": "relevance",
+        "order": "newest_first",
         "price_to": "12",
         "currency": "EUR",
         "filters": {
@@ -66,7 +66,14 @@ queries = [
             "brand": [],
             "size": [],
             "status": [],
-            "color": ["26", "9"],
+            "color": [
+    "3", "9", "27", "17",  # Niebieskie i Turkus
+    "30", "7", "28", "16", # Zielenie i Oliwki
+    "24", "5", "8", "23",  # Róż, Czerwień i Bordo
+    "29", "6",             # Fiolety i Lawenda
+    "11", "10"             # Pomarańcz/Bursztyn oraz Wielokolorowe (dodatkowe)
+            ]
+            
             "material": [],
         }
     },
@@ -76,7 +83,7 @@ queries = [
         "per_page": "24",
         "search_text": "Christofle",
         "order": "newest_first",
-        "price_to": "25",
+        "price_to": "15",
         "currency": "EUR",
         "filters": {
             "catalog": ["1920"],
@@ -93,7 +100,7 @@ queries = [
         "per_page": "24",
         "search_text": "Ercuis",
         "order": "newest_first",
-        "price_to": "25",
+        "price_to": "15",
         "currency": "EUR",
         "filters": {
             "catalog": ["1920"],
