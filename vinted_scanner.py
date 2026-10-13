@@ -508,23 +508,14 @@ def process_item(
 
 
 
-
-
 def initialize_vinted_session(marketplace_url):
-    """Initialize an anonymous Vinted web session using browser TLS impersonation."""
+    """Initialize a Vinted session without hitting the blocked homepage."""
     session = curl_requests.Session(impersonate="chrome120")
-    
-    # Najpierw wchodzimy na stronę główną, żeby pobrać ciasteczka sesyjne
-    response = session.get(
-        marketplace_url,
-        headers=WEB_HEADERS,
-        timeout=REQUEST_TIMEOUT_SECONDS,
-    )
-    
-    print(f"--- STATUS SESJI VINTED: {response.status_code} ---", flush=True)
-    print(f"--- POBRANE CIASTECZKA: {dict(session.cookies)} ---", flush=True)
-    
+    print("--- SESJA VINTED (BEZ STRONY GŁÓWNEJ) NAWIĄZANA ---", flush=True)
     return session
+    
+
+
     
     
 
