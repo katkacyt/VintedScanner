@@ -49,7 +49,7 @@ queries = [
         "page": "1",
         "per_page": "24",
         "search_text": "albâtre",
-        "order": "relevance",
+        "order": "newest_first",
         "filters": {
             "catalog": ["1934"],
             "price_to": ["12"],
