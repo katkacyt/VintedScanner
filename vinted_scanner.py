@@ -513,22 +513,21 @@ def process_item(
 
 
 def initialize_vinted_session(marketplace_url):
-    """Initialize an anonymous Vinted web session with fallback/debug."""
-    # Próbujemy innej przeglądarki, np. Safari lub Edge
-    session = curl_requests.Session(impersonate="safari15_3")
+    """Initialize an anonymous Vinted web session using browser TLS impersonation."""
+    session = curl_requests.Session(impersonate="chrome120")
     
+    # Najpierw wchodzimy na stronę główną, żeby pobrać ciasteczka sesyjne
     response = session.get(
         marketplace_url,
         headers=WEB_HEADERS,
         timeout=REQUEST_TIMEOUT_SECONDS,
     )
     
-    print(f"--- STATUS ODPOWIEDZI VINTED: {response.status_code} ---", flush=True)
-    if response.status_code == 403:
-        print(f"--- TREŚĆ BLOKADY CLOUDFLARE: {response.text[:200]} ---", flush=True)
+    print(f"--- STATUS SESJI VINTED: {response.status_code} ---", flush=True)
+    print(f"--- POBRANE CIASTECZKA: {dict(session.cookies)} ---", flush=True)
     
-    # Nie wywołujemy raise_for_status() na siłę, żeby sprawdzić, czy sesja ma ciasteczka
     return session
+    
     
 
 def process_queries(session, catalog_url, queries, api_headers, analyzed_items, dry_run):
