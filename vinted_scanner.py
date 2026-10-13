@@ -1,3 +1,5 @@
+print("--- TEST: SKRYPT RUSZYŁ ---", flush=True)
+
 #!/usr/bin/env python3
 """Search Vinted and notify users about newly listed matching items."""
 import argparse
