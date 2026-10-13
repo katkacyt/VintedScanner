@@ -456,7 +456,7 @@ def get_catalog_items(session, catalog_url, params, api_headers):
         )
 
     return items
-```
+
 
 
 
