@@ -183,7 +183,7 @@ queries = [
     {
         "page": "1",
         "per_page": "10",
-        "search_text": "alabatre",
+        "search_text": "nike",
         "order": "newest_first",
         "price_to": "60",
         "currency": "EUR",
