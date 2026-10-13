@@ -72,7 +72,7 @@ queries = [
     "24", "5", "8", "23",  # Róż, Czerwień i Bordo
     "29", "6",             # Fiolety i Lawenda
     "11", "10"             # Pomarańcz/Bursztyn oraz Wielokolorowe (dodatkowe)
-            ]
+            ],
             
             "material": [],
         }
