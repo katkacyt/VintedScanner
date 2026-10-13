@@ -491,16 +491,56 @@ def process_item(
     return succeeded
 
 
+
 def initialize_vinted_session(marketplace_url):
-    """Initialize an anonymous Vinted web session."""
-    session = requests.Session()
-    response = session.get(
-        marketplace_url,
-        headers=WEB_HEADERS,
-        timeout=REQUEST_TIMEOUT_SECONDS,
+    """Initialize and diagnose a Vinted web session."""
+    session = curl_requests.Session(impersonate="chrome120")
+
+    print(
+        "--- DIAGNOSTYKA SESJI: rozpoczynam żądanie do strony Vinted ---",
+        flush=True,
     )
-    response.raise_for_status()
+
+    try:
+        response = session.get(
+            marketplace_url,
+            headers=WEB_HEADERS,
+            timeout=REQUEST_TIMEOUT_SECONDS,
+        )
+
+        print(
+            f"--- DIAGNOSTYKA STRONY: HTTP {response.status_code}; "
+            f"cookies={len(session.cookies)}; "
+            f"content-type={response.headers.get('content-type', 'brak')} ---",
+            flush=True,
+        )
+
+        print(
+            f"--- DIAGNOSTYKA STRONY: adres odpowiedzi "
+            f"{response.url} ---",
+            flush=True,
+        )
+
+        print(
+            f"--- DIAGNOSTYKA STRONY: cf-ray="
+            f"{response.headers.get('cf-ray', 'brak')} ---",
+            flush=True,
+        )
+
+    except curl_requests.exceptions.RequestException as error:
+        print(
+            f"--- DIAGNOSTYKA SESJI: "
+            f"{type(error).__name__}: {error} ---",
+            flush=True,
+        )
+
+    print(
+        f"--- SESJA UTWORZONA: cookies={len(session.cookies)} ---",
+        flush=True,
+    )
+
     return session
+
 
 
 def process_queries(session, catalog_url, queries, api_headers, analyzed_items, dry_run):
