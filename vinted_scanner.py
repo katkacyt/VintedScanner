@@ -13,6 +13,7 @@ from email.message import EmailMessage
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from urllib.parse import urljoin, urlsplit, urlunsplit
+from curl_cffi import requests as curl_requests
 
 import requests
 
@@ -506,9 +507,14 @@ def process_item(
     return succeeded
 
 
+
+
+
 def initialize_vinted_session(marketplace_url):
-    """Initialize an anonymous Vinted web session."""
-    session = requests.Session()
+    """Initialize an anonymous Vinted web session using browser TLS impersonation."""
+    # Tworzymy sesję imitującą przeglądarkę Chrome, co omija blokadę 403 na Renderze
+    session = curl_requests.Session(impersonate="chrome120")
+    
     response = session.get(
         marketplace_url,
         headers=WEB_HEADERS,
@@ -516,7 +522,7 @@ def initialize_vinted_session(marketplace_url):
     )
     response.raise_for_status()
     return session
-
+    
 
 def process_queries(session, catalog_url, queries, api_headers, analyzed_items, dry_run):
     """Process every configured query and report whether any query failed."""
