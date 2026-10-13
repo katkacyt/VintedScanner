@@ -33,7 +33,7 @@ WEB_HEADERS = {
         "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,"
         "image/webp,image/png,image/svg+xml,*/*;q=0.8"
     ),
-    "Accept-Language": "it-IT,it;q=0.8,en-US;q=0.5,en;q=0.3",
+    "Accept-Language": "fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7",
     "DNT": "1",
     "Connection": "keep-alive",
     "Upgrade-Insecure-Requests": "1",
