@@ -558,33 +558,44 @@ def load_configuration(dry_run=False):
 def main(dry_run=False):
     """Run the scanner and return a process exit code."""
     configure_logging()
+    print("--- 1. SKRYPT STARTUJE ---", flush=True)
+    
     try:
         catalog_url, queries, api_headers = load_configuration(dry_run)
         analyzed_items = load_analyzed_items()
+        print(f"--- 2. KONFIGURACJA WCZYTANA. Liczba zapytań: {len(queries)} ---", flush=True)
     except (AttributeError, OSError, ValueError) as error:
         message = f"Configuration or local database error: {error}"
         logging.error(message)
-        print(message, file=sys.stderr)
+        print(message, file=sys.stderr, flush=True)
         return 2
 
     try:
+        print("--- 3. ŁĄCZĘ SIĘ Z VINTED ---", flush=True)
         session = initialize_vinted_session(Config.vinted_url)
+        print("--- SESJA VINTED NAWIĄZANA ---", flush=True)
     except requests.exceptions.RequestException as error:
         logging.error("Unable to initialize the Vinted session: %s", error)
+        print(f"--- BŁĄD SESJI: {error} ---", flush=True)
         return 1
 
     anon_id = session.cookies.get("anon_id")
     if anon_id:
         api_headers["X-Anon-Id"] = anon_id
 
+    print("--- 4. ROZPOCZYNAM SKANOWANIE ZAPYTAŃ ---", flush=True)
     try:
         query_failed = process_queries(
             session, catalog_url, queries, api_headers, analyzed_items, dry_run
         )
     except OSError as error:
         logging.error("Unable to update the local database: %s", error)
+        print(f"--- BŁĄD BAZY: {error} ---", flush=True)
         return 1
+        
+    print("--- 5. CYKL SKANOWANIA ZAKOŃCZONY ---", flush=True)
     return 1 if query_failed else 0
+
 
 if __name__ == "__main__":
     try:
@@ -596,6 +607,4 @@ if __name__ == "__main__":
         print("=== KRYSTYCZNY BŁĄD SKRYPTU ===", flush=True)
         traceback.print_exc()
         sys.exit(1)
-
-
-
+        
