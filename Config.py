@@ -179,4 +179,14 @@ queries = [
             "material": [],
         }
     },
+    # 3. Alabaster (ogólna dekoracja)
+    {
+        "page": "1",
+        "per_page": "10",
+        "search_text": "alabatre",
+        "order": "newest_first",
+        "price_to": "60",
+        "currency": "EUR",
+        "filters": {}
+    }
 ]
