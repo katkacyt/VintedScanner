@@ -17,7 +17,6 @@ vinted_url = "https://www.vinted.fr"
 # Locale sent to the Vinted API. This can differ for multilingual markets.
 vinted_locale = "fr-FR"
 
-# Vinted search queries
 queries = [
     # 1. Micro mosaic boite
     {
@@ -53,6 +52,25 @@ queries = [
             "material": [],
         }
     },
+
+    # 2. Micro mosaic broche
+    {
+        "page": "1",
+        "per_page": "24",
+        "search_text": " micro mosaïque",
+        "order": "newest_first",
+        "price_to": "12",
+        "currency": "EUR",
+        "filters": {
+            "catalog": ["14"],
+            "brand": [],
+            "size": [],
+            "status": [],
+            "color": [],
+            "material": [],
+        }
+    },  # <--- TUTAJ BRAKOWAŁO ZAMKNIĘCIA KLAWIATURY I PRZECINKA
+
     # 3. Alabaster
     {
         "page": "1",
@@ -67,66 +85,98 @@ queries = [
             "size": [],
             "status": [],
             "color": [
-    "3", "9", "27", "17",  # Niebieskie i Turkus
-    "30", "7", "28", "16", # Zielenie i Oliwki
-    "24", "5", "8", "23",  # Róż, Czerwień i Bordo
-    "29", "6",             # Fiolety i Lawenda
-    "11", "10"             # Pomarańcz/Bursztyn oraz Wielokolorowe (dodatkowe)
+                "3", "9", "27", "17",  # Niebieskie i Turkus
+                "30", "7", "28", "16", # Zielenie i Oliwki
+                "24", "5", "8", "23",  # Róż, Czerwień i Bordo
+                "29", "6",             # Fiolety i Lawenda
+                "11", "10"             # Pomarańcz/Bursztyn oraz Wielokolorowe (dodatkowe)
             ],
-            
             "material": [],
         }
     },
-    # 4. Christofle
-    {
-        "page": "1",
-        "per_page": "24",
-        "search_text": "Christofle",
-        "order": "newest_first",
-        "price_to": "15",
-        "currency": "EUR",
-        "filters": {
-            "catalog": ["1920"],
-            "brand": [],
-            "size": [],
-            "status": [],
-            "color": [],
-            "material": [],
-        }
-    },
-    # 5. Ercuis
-    {
-        "page": "1",
-        "per_page": "24",
-        "search_text": "Ercuis",
-        "order": "newest_first",
-        "price_to": "15",
-        "currency": "EUR",
-        "filters": {
-            "catalog": ["1920"],
-            "brand": [],
-            "size": [],
-            "status": [],
-            "color": [],
-            "material": [],
-        }
-    },
-    # 6. Poinçon argent
-    {
-        "page": "1",
-        "per_page": "24",
-        "search_text": "Poinçon argent",
-        "order": "newest_first",
-        "price_to": "20",
-        "currency": "EUR",
-        "filters": {
-            "catalog": ["1920"],
-            "brand": [],
-            "size": [],
-            "status": [],
-            "color": [],
-            "material": [],
-        }
-    }
-]
 
+    {
+        "page": "1",
+        "per_page": "24",
+        "search_text": "boite pivoter",
+        "order": "newest_first",
+        "price_to": "10",
+        "currency": "EUR",
+        "filters": {
+            "catalog": [],
+            "brand": [],
+            "size": [],
+            "status": [],
+            "color": ["4"],
+            "material": [],
+        }
+    },
+
+    {
+        "page": "1",
+        "per_page": "24",
+        "search_text": "boite compartimente",
+        "order": "newest_first",
+        "price_to": "10",
+        "currency": "EUR",
+        "filters": {
+            "catalog": [],
+            "brand": [],
+            "size": [],
+            "status": [],
+            "color": ["4"],
+            "material": [],
+        }
+    },
+
+    {
+        "page": "1",
+        "per_page": "24",
+        "search_text": "boite tuya",
+        "order": "newest_first",
+        "price_to": "7",
+        "currency": "EUR",
+        "filters": {
+            "catalog": [],
+            "brand": [],
+            "size": [],
+            "status": [],
+            "color": ["4"],
+            "material": [],
+        }
+    },
+
+    {
+        "page": "1",
+        "per_page": "24",
+        "search_text": "boite marocaine",
+        "order": "newest_first",
+        "price_to": "7",
+        "currency": "EUR",
+        "filters": {
+            "catalog": [],
+            "brand": [],
+            "size": [],
+            "status": [],
+            "color": ["4"],
+            "material": [],
+        }
+    },
+
+    {
+        "page": "1",
+        "per_page": "24",
+        "search_text": "caja madera tuya",
+        "order": "newest_first",
+        "price_to": "10",
+        "currency": "EUR",
+        "filters": {
+            "catalog": [],
+            "brand": [],
+            "size": [],
+            "status": [],
+            "color": ["4"],
+            "material": [],
+        }
+    },
+]
