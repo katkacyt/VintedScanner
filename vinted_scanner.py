@@ -586,7 +586,16 @@ def main(dry_run=False):
         return 1
     return 1 if query_failed else 0
 
-
 if __name__ == "__main__":
-    arguments = parse_arguments()
-    sys.exit(main(dry_run=arguments.dry_run))
+    try:
+        print("--- URUCHAMIAM SKANER ---", flush=True)
+        arguments = parse_arguments()
+        sys.exit(main(dry_run=arguments.dry_run))
+    except Exception as e:
+        import traceback
+        print("=== KRYSTYCZNY BŁĄD SKRYPTU ===", flush=True)
+        traceback.print_exc()
+        sys.exit(1)
+
+
+
