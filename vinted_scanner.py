@@ -404,14 +404,34 @@ def get_catalog_items(session, catalog_url, params, api_headers):
             timeout=REQUEST_TIMEOUT_SECONDS,
         )
         response.raise_for_status()
-    except requests.exceptions.RequestException as error:
-        raise CatalogError(f"Vinted catalogue request failed: {error}") from error
+
+    except curl_requests.exceptions.RequestException as error:
+        status_code = getattr(
+            getattr(error, "response", None),
+            "status_code",
+            None,
+        )
+
+        logging.error(
+            "Vinted catalogue request failed. "
+            "Exception=%s, HTTP status=%s, error=%s",
+            type(error).__name__,
+            status_code,
+            error,
+        )
+
+        raise CatalogError(
+            f"Vinted catalogue request failed "
+            f"(HTTP {status_code or 'unknown'}, "
+            f"{type(error).__name__}: {error})"
+        ) from error
 
     try:
         data = response.json()
     except ValueError as error:
         raise CatalogError(
-            f"Vinted returned a non-JSON response (HTTP {response.status_code})"
+            "Vinted returned a non-JSON response "
+            f"(HTTP {response.status_code})"
         ) from error
 
     if not isinstance(data, dict):
@@ -421,13 +441,23 @@ def get_catalog_items(session, catalog_url, params, api_headers):
         )
 
     items = data.get("items")
+
     if not isinstance(items, list):
-        error_message = data.get("message") or data.get("error") or "unknown error"
+        error_message = (
+            data.get("message")
+            or data.get("error")
+            or "unknown error"
+        )
+
         raise CatalogError(
             "Vinted response does not contain a valid 'items' list "
-            f"(HTTP {response.status_code}, message: {error_message})"
+            f"(HTTP {response.status_code}, "
+            f"message: {error_message})"
         )
+
     return items
+```
+
 
 
 def normalize_item(item):
