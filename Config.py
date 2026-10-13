@@ -21,6 +21,8 @@ vinted_locale = "fr-FR"
 queries = [
     # 1. Micro mosaic boite
     {
+        "page": "1",
+        "per_page": "24",
         "search_text": "Boite micro mosaic",
         "order": "newest_first",
         "filters": {
@@ -32,6 +34,8 @@ queries = [
     },
     # 2. Micro mosaic broche
     {
+        "page": "1",
+        "per_page": "24",
         "search_text": "broche micro mosaïque",
         "order": "newest",
         "filters": {
@@ -42,6 +46,8 @@ queries = [
     },
     # 3. Alabaster
     {
+        "page": "1",
+        "per_page": "24",
         "search_text": "albâtre",
         "order": "relevance",
         "filters": {
@@ -53,6 +59,8 @@ queries = [
     },
     # 4. Christofle
     {
+        "page": "1",
+        "per_page": "24",
         "search_text": "Christofle",
         "order": "newest_first",
         "filters": {
@@ -63,6 +71,8 @@ queries = [
     },
     # 5. Ercuis
     {
+        "page": "1",
+        "per_page": "24",
         "search_text": "Ercuis",
         "order": "newest_first",
         "filters": {
@@ -73,6 +83,8 @@ queries = [
     },
     # 6. Poinçon argent
     {
+        "page": "1",
+        "per_page": "24",
         "search_text": "Poinçon argent",
         "order": "newest_first",
         "filters": {
