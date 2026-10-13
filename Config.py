@@ -25,11 +25,15 @@ queries = [
         "per_page": "24",
         "search_text": "Boite micro mosaic",
         "order": "newest_first",
+        "price_to": "15",
+        "currency": "EUR",
         "filters": {
             "catalog": ["1963"],
-            "price_to": ["15"],
-            "currency": ["EUR"],
-            "status_ids": ["2"]
+            "brand": [],
+            "size": [],
+            "status": ["2"],
+            "color": [],
+            "material": [],
         }
     },
     # 2. Micro mosaic broche
@@ -38,10 +42,15 @@ queries = [
         "per_page": "24",
         "search_text": "broche micro mosaïque",
         "order": "newest_first",
+        "price_to": "8",
+        "currency": "EUR",
         "filters": {
             "catalog": ["21"],
-            "price_to": ["8"],
-            "currency": ["EUR"]
+            "brand": [],
+            "size": [],
+            "status": [],
+            "color": [],
+            "material": [],
         }
     },
     # 3. Alabaster
@@ -49,12 +58,16 @@ queries = [
         "page": "1",
         "per_page": "24",
         "search_text": "albâtre",
-        "order": "newest_first",
+        "order": "relevance",
+        "price_to": "12",
+        "currency": "EUR",
         "filters": {
             "catalog": ["1934"],
-            "price_to": ["12"],
-            "currency": ["EUR"],
-            "color_ids": ["26", "9"]
+            "brand": [],
+            "size": [],
+            "status": [],
+            "color": ["26", "9"],
+            "material": [],
         }
     },
     # 4. Christofle
@@ -63,10 +76,15 @@ queries = [
         "per_page": "24",
         "search_text": "Christofle",
         "order": "newest_first",
+        "price_to": "25",
+        "currency": "EUR",
         "filters": {
             "catalog": ["1920"],
-            "price_to": ["25"],
-            "currency": ["EUR"]
+            "brand": [],
+            "size": [],
+            "status": [],
+            "color": [],
+            "material": [],
         }
     },
     # 5. Ercuis
@@ -75,10 +93,15 @@ queries = [
         "per_page": "24",
         "search_text": "Ercuis",
         "order": "newest_first",
+        "price_to": "25",
+        "currency": "EUR",
         "filters": {
             "catalog": ["1920"],
-            "price_to": ["25"],
-            "currency": ["EUR"]
+            "brand": [],
+            "size": [],
+            "status": [],
+            "color": [],
+            "material": [],
         }
     },
     # 6. Poinçon argent
@@ -87,10 +110,15 @@ queries = [
         "per_page": "24",
         "search_text": "Poinçon argent",
         "order": "newest_first",
+        "price_to": "20",
+        "currency": "EUR",
         "filters": {
             "catalog": ["1920"],
-            "price_to": ["20"],
-            "currency": ["EUR"]
+            "brand": [],
+            "size": [],
+            "status": [],
+            "color": [],
+            "material": [],
         }
     }
 ]
