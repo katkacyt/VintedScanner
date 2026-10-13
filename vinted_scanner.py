@@ -613,11 +613,11 @@ def main(dry_run=False):
     anon_id = session.cookies.get("anon_id")
     if anon_id:
         api_headers["X-Anon-Id"] = anon_id
-print(
-    f"--- DIAGNOSTYKA: liczba cookies sesji: "
-    f"{len(session.cookies)}; anon_id obecny: {bool(anon_id)} ---",
-    flush=True,
-)
+    print(
+        f"--- DIAGNOSTYKA: liczba cookies sesji: "
+        f"{len(session.cookies)}; anon_id obecny: {bool(anon_id)} ---",
+        flush=True,
+    )
     print("--- 4. ROZPOCZYNAM SKANOWANIE ZAPYTAŃ ---", flush=True)
     try:
         query_failed = process_queries(
