@@ -37,7 +37,7 @@ queries = [
         "page": "1",
         "per_page": "24",
         "search_text": "broche micro mosaïque",
-        "order": "newest",
+        "order": "newest_first",
         "filters": {
             "catalog": ["21"],
             "price_to": ["8"],
@@ -94,3 +94,4 @@ queries = [
         }
     }
 ]
+
