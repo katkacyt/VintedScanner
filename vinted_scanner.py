@@ -314,7 +314,7 @@ def send_slack_message(item_title, item_price, item_url, item_image, matched_que
 def send_telegram_message(
     item_title, item_price, item_url, item_image, matched_query=None
 ):
-    """Send an HTML-safe Telegram notification and report its result."""
+    """Send a Telegram photo notification with caption and link, reporting its result."""
     message_lines = [
         f"<b>{html.escape(str(item_title))}</b>",
         f"🏷️ {html.escape(str(item_price))}",
@@ -324,20 +324,30 @@ def send_telegram_message(
             f"Matched query: {html.escape(str(matched_query))}"
         )
     message_lines.append(f"🔗 {html.escape(str(item_url))}")
-    if item_image:
-        message_lines.append(f"📷 {html.escape(str(item_image))}")
+    
+    caption_text = "\n".join(message_lines)
 
-    url = f"https://api.telegram.org/bot{Config.telegram_bot_token}/sendMessage"
-    params = {
-        "chat_id": Config.telegram_chat_id,
-        "text": "\n".join(message_lines),
-        "parse_mode": "HTML",
-        "link_preview_options": json.dumps({"is_disabled": True}),
-    }
+    if item_image:
+        url = f"https://api.telegram.org/bot{Config.telegram_bot_token}/sendPhoto"
+        payload = {
+            "chat_id": Config.telegram_chat_id,
+            "photo": item_image,
+            "caption": caption_text,
+            "parse_mode": "HTML",
+        }
+    else:
+        url = f"https://api.telegram.org/bot{Config.telegram_bot_token}/sendMessage"
+        payload = {
+            "chat_id": Config.telegram_chat_id,
+            "text": caption_text,
+            "parse_mode": "HTML",
+            "link_preview_options": json.dumps({"is_disabled": True}),
+        }
+
     try:
         response = requests.post(
             url,
-            params=params,
+            data=payload,
             timeout=REQUEST_TIMEOUT_SECONDS,
         )
         response.raise_for_status()
@@ -346,6 +356,9 @@ def send_telegram_message(
     except requests.exceptions.RequestException as error:
         logging.error("Error sending Telegram notification: %s", error)
         return False
+        
+
+
 
 
 def send_notifications(
