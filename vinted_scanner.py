@@ -510,17 +510,24 @@ def process_item(
 
 
 
+
+
 def initialize_vinted_session(marketplace_url):
-    """Initialize an anonymous Vinted web session using browser TLS impersonation."""
-    # Tworzymy sesję imitującą przeglądarkę Chrome, co omija blokadę 403 na Renderze
-    session = curl_requests.Session(impersonate="chrome120")
+    """Initialize an anonymous Vinted web session with fallback/debug."""
+    # Próbujemy innej przeglądarki, np. Safari lub Edge
+    session = curl_requests.Session(impersonate="safari15_3")
     
     response = session.get(
         marketplace_url,
         headers=WEB_HEADERS,
         timeout=REQUEST_TIMEOUT_SECONDS,
     )
-    response.raise_for_status()
+    
+    print(f"--- STATUS ODPOWIEDZI VINTED: {response.status_code} ---", flush=True)
+    if response.status_code == 403:
+        print(f"--- TREŚĆ BLOKADY CLOUDFLARE: {response.text[:200]} ---", flush=True)
+    
+    # Nie wywołujemy raise_for_status() na siłę, żeby sprawdzić, czy sesja ma ciasteczka
     return session
     
 
