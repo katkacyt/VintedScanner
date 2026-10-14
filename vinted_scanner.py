@@ -490,8 +490,9 @@ def send_notifications(
     return all(results)
 
 
+
 def get_catalog_items(session, catalog_url, params, api_headers):
-    """Return catalogue items or raise CatalogError for an invalid response."""
+    """Return catalogue items or raise CatalogError with safe diagnostics."""
     try:
         response = session.get(
             catalog_url,
@@ -499,7 +500,6 @@ def get_catalog_items(session, catalog_url, params, api_headers):
             headers=api_headers,
             timeout=REQUEST_TIMEOUT_SECONDS,
         )
-        response.raise_for_status()
 
     except curl_requests.exceptions.RequestException as error:
         status_code = getattr(
@@ -509,7 +509,7 @@ def get_catalog_items(session, catalog_url, params, api_headers):
         )
 
         logging.error(
-            "Vinted catalogue request failed. "
+            "[VINTED DEBUG] Błąd połączenia. "
             "Exception=%s, HTTP status=%s, error=%s",
             type(error).__name__,
             status_code,
@@ -522,9 +522,41 @@ def get_catalog_items(session, catalog_url, params, api_headers):
             f"{type(error).__name__}: {error})"
         ) from error
 
+    # Diagnostyka odpowiedzi HTTP — bez zapisywania cookies i nagłówków.
+    if response.status_code != 200:
+        content_type = response.headers.get("content-type", "")
+        body_start = response.text[:800]
+
+        logging.error(
+            "[VINTED DEBUG] Odpowiedź HTTP: status=%s, "
+            "content-type=%r, url=%s",
+            response.status_code,
+            content_type,
+            response.url,
+        )
+
+        logging.error(
+            "[VINTED DEBUG] Początek treści odpowiedzi: %r",
+            body_start,
+        )
+
+        raise CatalogError(
+            f"Vinted catalogue request failed "
+            f"(HTTP {response.status_code}, "
+            f"content-type={content_type!r})"
+        )
+
     try:
         data = response.json()
     except ValueError as error:
+        logging.error(
+            "[VINTED DEBUG] Odpowiedź HTTP %s nie jest JSON-em. "
+            "content-type=%r, początek=%r",
+            response.status_code,
+            response.headers.get("content-type", ""),
+            response.text[:800],
+        )
+
         raise CatalogError(
             "Vinted returned a non-JSON response "
             f"(HTTP {response.status_code})"
@@ -543,6 +575,14 @@ def get_catalog_items(session, catalog_url, params, api_headers):
             data.get("message")
             or data.get("error")
             or "unknown error"
+        )
+
+        logging.error(
+            "[VINTED DEBUG] Brak prawidłowej listy items. "
+            "HTTP=%s, message=%r, klucze=%s",
+            response.status_code,
+            error_message,
+            list(data.keys())[:30],
         )
 
         raise CatalogError(
