@@ -313,23 +313,33 @@ def send_slack_message(item_title, item_price, item_url, item_image, matched_que
 
 
 
+
 def send_telegram_message(
     item_title, item_price, item_url, item_image, matched_query=None
 ):
     """Send a Telegram notification to the chat assigned to the query."""
+
     chat_id = Config.telegram_chat_ids.get(
         (matched_query or "").strip().casefold(),
         Config.telegram_chat_id,
+    )
+
+    logging.info(
+        "[TELEGRAM DEBUG] query=%r, wybrany chat_id=%s",
+        matched_query,
+        chat_id,
     )
 
     message_lines = [
         f"<b>{html.escape(str(item_title))}</b>",
         f"🏷️ {html.escape(str(item_price))}",
     ]
+
     if matched_query:
         message_lines.append(
             f"Matched query: {html.escape(str(matched_query))}"
         )
+
     message_lines.append(f"🔗 {html.escape(str(item_url))}")
     caption_text = "\n".join(message_lines)
 
@@ -364,17 +374,44 @@ def send_telegram_message(
             data=payload,
             timeout=REQUEST_TIMEOUT_SECONDS,
         )
-        response.raise_for_status()
+
         logging.info(
-            "Telegram notification sent to chat %s for query %s",
+            "[TELEGRAM DEBUG] HTTP status=%s, odpowiedź=%s",
+            response.status_code,
+            response.text[:1000],
+        )
+
+        response.raise_for_status()
+
+        result = response.json()
+
+        if not result.get("ok"):
+            logging.error(
+                "[TELEGRAM DEBUG] Telegram zwrócił błąd: %s",
+                result,
+            )
+            return False
+
+        logging.info(
+            "[TELEGRAM DEBUG] Wiadomość wysłana. chat_id=%s, query=%r",
             chat_id,
             matched_query,
         )
         return True
-    except requests.exceptions.RequestException as error:
-        logging.error("Error sending Telegram notification: %s", error)
-        return False
 
+    except requests.exceptions.RequestException as error:
+        logging.error(
+            "[TELEGRAM DEBUG] Błąd wysyłania: %s",
+            error,
+        )
+
+        if error.response is not None:
+            logging.error(
+                "[TELEGRAM DEBUG] Odpowiedź API: %s",
+                error.response.text[:1000],
+            )
+
+        return False
 
 
 def send_notifications(
