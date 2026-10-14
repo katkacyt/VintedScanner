@@ -312,10 +312,16 @@ def send_slack_message(item_title, item_price, item_url, item_image, matched_que
         return False
 
 
+
 def send_telegram_message(
     item_title, item_price, item_url, item_image, matched_query=None
 ):
-    """Send a Telegram photo notification with caption and link, reporting its result."""
+    """Send a Telegram notification to the chat assigned to the query."""
+    chat_id = Config.telegram_chat_ids.get(
+        (matched_query or "").strip().casefold(),
+        Config.telegram_chat_id,
+    )
+
     message_lines = [
         f"<b>{html.escape(str(item_title))}</b>",
         f"🏷️ {html.escape(str(item_price))}",
@@ -325,24 +331,31 @@ def send_telegram_message(
             f"Matched query: {html.escape(str(matched_query))}"
         )
     message_lines.append(f"🔗 {html.escape(str(item_url))}")
-    
     caption_text = "\n".join(message_lines)
 
     if item_image:
-        url = f"https://api.telegram.org/bot{Config.telegram_bot_token}/sendPhoto"
+        url = (
+            f"https://api.telegram.org/bot"
+            f"{Config.telegram_bot_token}/sendPhoto"
+        )
         payload = {
-            "chat_id": Config.telegram_chat_id,
+            "chat_id": chat_id,
             "photo": item_image,
             "caption": caption_text,
             "parse_mode": "HTML",
         }
     else:
-        url = f"https://api.telegram.org/bot{Config.telegram_bot_token}/sendMessage"
+        url = (
+            f"https://api.telegram.org/bot"
+            f"{Config.telegram_bot_token}/sendMessage"
+        )
         payload = {
-            "chat_id": Config.telegram_chat_id,
+            "chat_id": chat_id,
             "text": caption_text,
             "parse_mode": "HTML",
-            "link_preview_options": json.dumps({"is_disabled": True}),
+            "link_preview_options": json.dumps(
+                {"is_disabled": True}
+            ),
         }
 
     try:
@@ -352,13 +365,15 @@ def send_telegram_message(
             timeout=REQUEST_TIMEOUT_SECONDS,
         )
         response.raise_for_status()
-        logging.info("Telegram notification sent")
+        logging.info(
+            "Telegram notification sent to chat %s for query %s",
+            chat_id,
+            matched_query,
+        )
         return True
     except requests.exceptions.RequestException as error:
         logging.error("Error sending Telegram notification: %s", error)
         return False
-        
-
 
 
 
