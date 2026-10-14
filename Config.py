@@ -8,7 +8,8 @@ smtp_toaddrs = []
 slack_webhook_url = ""
 
 # Telegram Token and ChatID for notification
-telegram_bot_token = "8958100650:AAF3ZJv541cfXBziFDrU4EOUfB10ecu1_oE"
+import os
+telegram_bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 telegram_chat_id = "7278628580"
 
 telegram_chat_ids = {
