@@ -455,6 +455,11 @@ def get_catalog_items(session, catalog_url, params, api_headers):
             headers=api_headers,
             timeout=REQUEST_TIMEOUT_SECONDS,
         )
+        if response.status_code == 403:
+            logging.error(
+                "[VINTED DEBUG] Początek odpowiedzi 403: %r",
+                response.text[:500],
+        )
         response.raise_for_status()
 
     except curl_requests.exceptions.RequestException as error:
