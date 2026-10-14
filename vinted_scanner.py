@@ -7,6 +7,7 @@ import email.utils
 import html
 import json
 import logging
+import os
 import smtplib
 import sys
 from email.message import EmailMessage
@@ -16,6 +17,7 @@ from urllib.parse import urljoin, urlsplit, urlunsplit
 from curl_cffi import requests as curl_requests
 
 import requests
+import psycopg
 
 import Config
 
@@ -24,6 +26,8 @@ PROJECT_DIR = Path(__file__).resolve().parent
 ITEMS_DATABASE_PATH = PROJECT_DIR / "vinted_items.txt"
 LOG_PATH = PROJECT_DIR / "vinted_scanner.log"
 REQUEST_TIMEOUT_SECONDS = 30
+DATABASE_CONNECTION = None
+DATABASE_BOOTSTRAP_MODE = False
 
 WEB_HEADERS = {
     "User-Agent": (
@@ -239,17 +243,95 @@ def validate_notification_config(dry_run=False):
         )
 
 
+def initialize_database():
+    """Connect to Neon and create the persistent item archive if needed."""
+    global DATABASE_CONNECTION
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        raise ValueError("DATABASE_URL is not configured in the Render environment")
+
+    DATABASE_CONNECTION = psycopg.connect(database_url, connect_timeout=15)
+    DATABASE_CONNECTION.autocommit = True
+    with DATABASE_CONNECTION.cursor() as cursor:
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS vinted_items (
+                item_id TEXT PRIMARY KEY,
+                title TEXT NOT NULL DEFAULT '',
+                price TEXT NOT NULL DEFAULT '',
+                url TEXT NOT NULL DEFAULT '',
+                image_url TEXT,
+                first_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                matched_query TEXT,
+                notified BOOLEAN NOT NULL DEFAULT FALSE
+            )
+        """)
+    logging.info("Connected to persistent Neon archive")
+    print("--- BAZA NEON: połączenie i tabela gotowe ---", flush=True)
+
+
 def load_analyzed_items(database_path=ITEMS_DATABASE_PATH):
-    """Load item IDs, creating the local database if it does not exist."""
-    database_path.touch(exist_ok=True)
-    with database_path.open("r", encoding="utf-8", errors="ignore") as database:
-        return {line.strip() for line in database if line.strip()}
+    """Load notified item IDs and import legacy IDs from the local text file."""
+    if DATABASE_CONNECTION is None:
+        raise RuntimeError("Database has not been initialized")
+
+    # Preserve notification history from the old local file during first migration.
+    if database_path.exists():
+        with database_path.open("r", encoding="utf-8", errors="ignore") as database:
+            legacy_ids = {line.strip() for line in database if line.strip()}
+        if legacy_ids:
+            with DATABASE_CONNECTION.cursor() as cursor:
+                cursor.executemany(
+                    """INSERT INTO vinted_items (item_id, notified)
+                       VALUES (%s, TRUE) ON CONFLICT (item_id) DO NOTHING""",
+                    [(item_id,) for item_id in legacy_ids],
+                )
+            logging.info("Imported %s legacy item IDs", len(legacy_ids))
+
+    global DATABASE_BOOTSTRAP_MODE
+    with DATABASE_CONNECTION.cursor() as cursor:
+        cursor.execute("SELECT COUNT(*) FROM vinted_items")
+        DATABASE_BOOTSTRAP_MODE = cursor.fetchone()[0] == 0
+        cursor.execute("SELECT item_id FROM vinted_items WHERE notified = TRUE")
+        analyzed_ids = {row[0] for row in cursor.fetchall()}
+
+    if DATABASE_BOOTSTRAP_MODE:
+        print(
+            "--- ARCHIWUM: pierwsze skanowanie zapisze obecne oferty bez powiadomień ---",
+            flush=True,
+        )
+    return analyzed_ids
 
 
-def save_analyzed_item(item_id, database_path=ITEMS_DATABASE_PATH):
-    """Append an item ID to the local database."""
-    with database_path.open("a", encoding="utf-8") as database:
-        database.write(f"{item_id}\n")
+def save_analyzed_item(item, matched_query=None, notified=False):
+    """Insert or update the latest known state of an item without deleting history."""
+    if DATABASE_CONNECTION is None:
+        raise RuntimeError("Database has not been initialized")
+    with DATABASE_CONNECTION.cursor() as cursor:
+        cursor.execute(
+            """INSERT INTO vinted_items
+                   (item_id, title, price, url, image_url, matched_query, notified)
+               VALUES (%s, %s, %s, %s, %s, %s, %s)
+               ON CONFLICT (item_id) DO UPDATE SET
+                   title = EXCLUDED.title,
+                   price = EXCLUDED.price,
+                   url = EXCLUDED.url,
+                   image_url = EXCLUDED.image_url,
+                   last_seen = NOW(),
+                   matched_query = EXCLUDED.matched_query,
+                   notified = vinted_items.notified OR EXCLUDED.notified""",
+            (item["id"], item["title"], item["price"], item["url"],
+             item["image"], matched_query, notified),
+        )
+
+
+def mark_item_notified(item_id):
+    """Mark an item as notified after notification succeeds (or dry-run completes)."""
+    with DATABASE_CONNECTION.cursor() as cursor:
+        cursor.execute(
+            "UPDATE vinted_items SET notified = TRUE, last_seen = NOW() WHERE item_id = %s",
+            (item_id,),
+        )
 
 
 def send_email(item_title, item_price, item_url, item_image, matched_query=None):
@@ -316,7 +398,7 @@ def send_telegram_message(
     item_title, item_price, item_url, item_image, matched_query=None
 ):
     """Send a Telegram photo notification with caption and link, reporting its result."""
-    message_lines = [
+        message_lines = [
         f"<b>{html.escape(str(item_title))}</b>",
         f"🏷️ {html.escape(str(item_price))}",
     ]
@@ -325,7 +407,7 @@ def send_telegram_message(
             f"Matched query: {html.escape(str(matched_query))}"
         )
     message_lines.append(f"🔗 {html.escape(str(item_url))}")
-    
+
     caption_text = "\n".join(message_lines)
 
     if item_image:
@@ -357,9 +439,6 @@ def send_telegram_message(
     except requests.exceptions.RequestException as error:
         logging.error("Error sending Telegram notification: %s", error)
         return False
-        
-
-
 
 
 def send_notifications(
@@ -458,8 +537,6 @@ def get_catalog_items(session, catalog_url, params, api_headers):
     return items
 
 
-
-
 def normalize_item(item):
     """Validate and normalize the fields used by notifications."""
     if not isinstance(item, dict):
@@ -514,7 +591,24 @@ def process_item(
 ):
     """Process one item and persist it only after the requested action succeeds."""
     normalized_item = normalize_item(item)
-    if not normalized_item or normalized_item["id"] in analyzed_items:
+    if not normalized_item:
+        return True
+
+    item_id = normalized_item["id"]
+    already_notified = item_id in analyzed_items
+
+    # On an empty archive, establish a baseline without sending a burst of
+    # notifications for all currently listed offers. Later cycles notify new IDs.
+    if DATABASE_BOOTSTRAP_MODE:
+        save_analyzed_item(normalized_item, matched_query, notified=True)
+        analyzed_items.add(item_id)
+        return True
+
+    # Archive every observed offer and update its last-known state, even if it
+    # was seen before. Rows are never deleted when an offer disappears from search.
+    save_analyzed_item(normalized_item, matched_query, notified=already_notified)
+
+    if already_notified:
         return True
 
     if dry_run:
@@ -530,15 +624,10 @@ def process_item(
         )
 
     if succeeded:
-        save_analyzed_item(normalized_item["id"], database_path)
-        analyzed_items.add(normalized_item["id"])
+        mark_item_notified(item_id)
+        analyzed_items.add(item_id)
     return succeeded
 
-
-
-
-
-    
 
 def initialize_vinted_session(marketplace_url):
     """Initialize and diagnose a Vinted web session."""
@@ -589,8 +678,6 @@ def initialize_vinted_session(marketplace_url):
 
     return session
 
-    
-    
 
 def process_queries(session, catalog_url, queries, api_headers, analyzed_items, dry_run):
     """Process every configured query and report whether any query failed."""
@@ -616,7 +703,6 @@ def process_queries(session, catalog_url, queries, api_headers, analyzed_items, 
             ):
                 processing_failed = True
     return processing_failed
-    
 
 
 def load_configuration(dry_run=False):
@@ -633,13 +719,14 @@ def main(dry_run=False):
     """Run the scanner and return a process exit code."""
     configure_logging()
     print("--- 1. SKRYPT STARTUJE ---", flush=True)
-    
+
     try:
         catalog_url, queries, api_headers = load_configuration(dry_run)
+        initialize_database()
         analyzed_items = load_analyzed_items()
         print(f"--- 2. KONFIGURACJA WCZYTANA. Liczba zapytań: {len(queries)} ---", flush=True)
-    except (AttributeError, OSError, ValueError) as error:
-        message = f"Configuration or local database error: {error}"
+    except (AttributeError, OSError, ValueError, psycopg.Error, RuntimeError) as error:
+        message = f"Configuration or database error: {error}"
         logging.error(message)
         print(message, file=sys.stderr, flush=True)
         return 2
@@ -666,11 +753,11 @@ def main(dry_run=False):
         query_failed = process_queries(
             session, catalog_url, queries, api_headers, analyzed_items, dry_run
         )
-    except OSError as error:
-        logging.error("Unable to update the local database: %s", error)
+    except (OSError, psycopg.Error, RuntimeError) as error:
+        logging.error("Unable to update the persistent database: %s", error)
         print(f"--- BŁĄD BAZY: {error} ---", flush=True)
         return 1
-        
+
     print("--- 5. CYKL SKANOWANIA ZAKOŃCZONY ---", flush=True)
     return 1 if query_failed else 0
 
@@ -685,4 +772,3 @@ if __name__ == "__main__":
         print("=== KRYSTYCZNY BŁĄD SKRYPTU ===", flush=True)
         traceback.print_exc()
         sys.exit(1)
-        
