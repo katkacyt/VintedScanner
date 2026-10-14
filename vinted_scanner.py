@@ -687,7 +687,7 @@ def process_item(
 
 
 def initialize_vinted_session(marketplace_url):
-    """Initialize and diagnose a Vinted web session."""
+    """Initialize a Vinted session and reject unsuccessful responses."""
     session = curl_requests.Session(impersonate="chrome120")
 
     print(
@@ -721,20 +721,32 @@ def initialize_vinted_session(marketplace_url):
             flush=True,
         )
 
-    except curl_requests.exceptions.RequestException as error:
+        if response.status_code == 403:
+            print(
+                "--- BŁĄD SESJI: Vinted odmówiło dostępu (HTTP 403). "
+                "Skanowanie nie powinno być kontynuowane. ---",
+                flush=True,
+            )
+            raise CatalogError(
+                "Vinted refused the initial page request (HTTP 403)"
+            )
+
+        response.raise_for_status()
+
         print(
-            f"--- DIAGNOSTYKA SESJI: "
-            f"{type(error).__name__}: {error} ---",
+            f"--- SESJA UTWORZONA: cookies={len(session.cookies)} ---",
             flush=True,
         )
+        return session
 
-    print(
-        f"--- SESJA UTWORZONA: cookies={len(session.cookies)} ---",
-        flush=True,
-    )
-
-    return session
-
+    except curl_requests.exceptions.RequestException as error:
+        print(
+            f"--- BŁĄD SESJI: {type(error).__name__}: {error} ---",
+            flush=True,
+        )
+        raise CatalogError(
+            f"Could not initialize Vinted session: {error}"
+        ) from error
 
 def process_queries(session, catalog_url, queries, api_headers, analyzed_items, dry_run):
     """Process every configured query and report whether any query failed."""
