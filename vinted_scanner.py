@@ -722,11 +722,10 @@ def initialize_vinted_session(marketplace_url):
         )
 
         if response.status_code == 403:
-            print(
-                "--- BŁĄD SESJI: Vinted odmówiło dostępu (HTTP 403). "
-                "Skanowanie nie powinno być kontynuowane. ---",
-                flush=True,
-            )
+            print("--- VINTED 403: POCZĄTEK ODPOWIEDZI ---", flush=True)
+            print(repr(response.text[:1500]), flush=True)
+            print("--- VINTED 403: KONIEC ODPOWIEDZI ---", flush=True)
+
             raise CatalogError(
                 "Vinted refused the initial page request (HTTP 403)"
             )
