@@ -632,11 +632,16 @@ def initialize_vinted_session(marketplace_url):
             flush=True,
         )
         
+        print(
+            f"--- DIAGNOSTYKA: przed odczytem treści, status={response.status_code} ---",
+            flush=True,
+        )
+
         if response.status_code == 403:
             print("--- VINTED 403: POCZĄTEK ODPOWIEDZI ---", flush=True)
-            print(response.text[:1500], flush=True)
+            print(repr(response.text[:1500]), flush=True)
             print("--- VINTED 403: KONIEC ODPOWIEDZI ---", flush=True)
-
+            
     except curl_requests.exceptions.RequestException as error:
         print(
             f"--- DIAGNOSTYKA SESJI: "
