@@ -11,6 +11,12 @@ slack_webhook_url = ""
 telegram_bot_token = "8958100650:AAF3ZJv541cfXBziFDrU4EOUfB10ecu1_oE"
 telegram_chat_id = "7278628580"
 
+telegram_chat_ids = {
+    "Boite micro mosaic": "7278628580",
+    "broche micro mosaïque": "-5434444028",
+}
+
+
 # Vinted URL: change the TLD according to your country (.fr, .es, etc.)
 vinted_url = "https://www.vinted.fr"
 
@@ -190,3 +196,7 @@ queries = [
    #     "filters": {}
   #  }
 ]
+
+
+
+
