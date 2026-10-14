@@ -723,7 +723,7 @@ def initialize_vinted_session(marketplace_url):
 
         if response.status_code == 403:
             print("--- VINTED 403: POCZĄTEK ODPOWIEDZI ---", flush=True)
-            print(repr(response.text[:1500]), flush=True)
+            print(repr(response.text[1500:7500]), flush=True)
             print("--- VINTED 403: KONIEC ODPOWIEDZI ---", flush=True)
 
             raise CatalogError(
