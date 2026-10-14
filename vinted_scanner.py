@@ -394,24 +394,29 @@ def send_slack_message(item_title, item_price, item_url, item_image, matched_que
         return False
 
 
+
 def send_telegram_message(
     item_title, item_price, item_url, item_image, matched_query=None
 ):
     """Send a Telegram photo notification with caption and link, reporting its result."""
-        message_lines = [
+    message_lines = [
         f"<b>{html.escape(str(item_title))}</b>",
         f"🏷️ {html.escape(str(item_price))}",
     ]
+
     if matched_query:
         message_lines.append(
             f"Matched query: {html.escape(str(matched_query))}"
         )
-    message_lines.append(f"🔗 {html.escape(str(item_url))}")
 
+    message_lines.append(f"🔗 {html.escape(str(item_url))}")
     caption_text = "\n".join(message_lines)
 
     if item_image:
-        url = f"https://api.telegram.org/bot{Config.telegram_bot_token}/sendPhoto"
+        url = (
+            f"https://api.telegram.org/bot"
+            f"{Config.telegram_bot_token}/sendPhoto"
+        )
         payload = {
             "chat_id": Config.telegram_chat_id,
             "photo": item_image,
@@ -419,7 +424,10 @@ def send_telegram_message(
             "parse_mode": "HTML",
         }
     else:
-        url = f"https://api.telegram.org/bot{Config.telegram_bot_token}/sendMessage"
+        url = (
+            f"https://api.telegram.org/bot"
+            f"{Config.telegram_bot_token}/sendMessage"
+        )
         payload = {
             "chat_id": Config.telegram_chat_id,
             "text": caption_text,
@@ -434,12 +442,21 @@ def send_telegram_message(
             timeout=REQUEST_TIMEOUT_SECONDS,
         )
         response.raise_for_status()
+
+        result = response.json()
+        if not result.get("ok"):
+            logging.error(
+                "Telegram API returned an error: %s",
+                result.get("description", "unknown error"),
+            )
+            return False
+
         logging.info("Telegram notification sent")
         return True
-    except requests.exceptions.RequestException as error:
+
+    except (requests.exceptions.RequestException, ValueError) as error:
         logging.error("Error sending Telegram notification: %s", error)
         return False
-
 
 def send_notifications(
     item_title, item_price, item_url, item_image, matched_query=None
